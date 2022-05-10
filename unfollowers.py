@@ -7,7 +7,10 @@ from colorama import init, Fore, Back, Style
 import time
 from time import sleep
 import getpass
+import warnings
 init(autoreset=True)
+
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 followinglist = list()
 followerslist = list()
@@ -54,6 +57,7 @@ class Program:
         try:
             self.username = input(str("Username : "))
             self.password = getpass.getpass("Password : ")
+
             print('\033c',self.index)
             print(Fore.GREEN+"[OK]"+Fore.WHITE)
             time.sleep(1)
@@ -96,7 +100,7 @@ class Program:
 
                 elif self.menu == 2:
                     Program.loginInfo(self)
-                    self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/div/div/button').click()
+                    #self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/div/div/button').click()
                     sleep(5)
                     print("LOGIN"+Fore.GREEN+"  [OK]"+Fore.WHITE)
                     time.sleep(1)
@@ -119,15 +123,17 @@ class Program:
             try:
                 self.program.get("https://www.instagram.com/%s" % self.username)
                 sleep(1)
-                self.followingcount = self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[3]/a/span').text
+                self.followingcount = self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[3]/a/div/span').text
                 self.followingcount = int(self.followingcount) + 10
-                self.program.find_element_by_xpath('//a[contains(@href, "%s")]' % "following").click()
-                time.sleep(1)
+                self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[3]').click()
+                sleep(2)
                 Program.scroll(self,self.followingcount)
                 print("\nFOLLOW"+Fore.GREEN+"  [OK]"+Fore.WHITE)
-
+                sleep(1)
+                x = 0
                 for i in range(1,self.followingcount):
-                    scr1 = self.program.find_element_by_xpath('/html/body/div[5]/div/div/div[3]/ul/div/li[%s]' % i)
+                    x += 1
+                    scr1 = self.program.find_element_by_xpath('/html/body/div[6]/div/div/div/div[3]/ul/div/li[%s]' % i)
                     self.program.execute_script("arguments[0].scrollIntoView();", scr1)
                     text = scr1.text.encode('utf-8').split()
                     followinglist.append(text[0].decode())
@@ -140,15 +146,18 @@ class Program:
             try:
                 self.program.get("https://www.instagram.com/%s" % self.username)
                 sleep(1)
-                self.followerscount = self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[2]/a/span').text
+                self.followerscount = self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[2]/a/div/span').text
                 self.followerscount = int(self.followerscount) + 10
-                self.program.find_element_by_xpath('//a[contains(@href, "%s")]' % "followers").click()
+                self.program.find_element_by_xpath('/html/body/div[1]/section/main/div/header/section/ul/li[2]/a/div').click()
                 sleep(1)
                 Program.scroll(self,self.followerscount)
                 print("\nFOLLOWERS"+Fore.GREEN+"  [OK]"+Fore.WHITE)
+                sleep(1)
+                x = 0
 
                 for i in range(1,self.followerscount):
-                    scr1 = self.program.find_element_by_xpath('/html/body/div[5]/div/div/div[2]/ul/div/li[%s]' % i)
+                    x += 1
+                    scr1 = self.program.find_element_by_xpath('/html/body/div[6]/div/div/div/div[2]/ul/div/li[%s]' % i)
                     self.program.execute_script("arguments[0].scrollIntoView();", scr1)
                     text = scr1.text.encode('utf-8').split()
                     followerslist.append(text[0].decode())
