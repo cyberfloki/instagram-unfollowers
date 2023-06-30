@@ -2,187 +2,182 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from colorama import init, Fore, Back, Style
-import time
+from selenium.webdriver.chrome.options import Options as chromeOptions
+from selenium.webdriver.firefox.options import Options as firefoxOptions
 from time import sleep
-import getpass
 import warnings
-init(autoreset=True)
+import pwinput
+import platform
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-followinglist = list()
-followerslist = list()
+takiplistesi = []
+takipcilistesi = []
+
+chrome_options = chromeOptions()
+chrome_options.headless = True
+
+firefox_options = firefoxOptions()
+firefox_options.headless = True
 
 class Program:
-    def __init__(self):
+    def __init__(self,driver):
         try:
             print('\033c')
-            options = Options()
-            options.headless = True
-            self.program = webdriver.Firefox(options=options)
+            self.program = driver
             Program.ascii(self)
-            print(self.index)
-            self.menu = int(input("[1] Two Factor Authentication\n[2] No Two Factor Authentication"+Fore.GREEN+"(stable)\n\n"+Fore.WHITE+"INPUT : "))
-            print('\033c',self.index)
+            self.menu = int(input('\033c'+self.index+'\n[1] İki Aşamalı Doğrulama ile\n[2] Normal Giriş (Daha stabil çalışır.)\n\nINPUT: '))
+            print('\033c', self.index)
             Program.instagram(self)
-        except (ZeroDivisionError,ValueError):
-            print('\033c'+self.index+Fore.RED+"INPUT ERROR... PROGRAM RESTARTED..."+Fore.WHITE)
-            time.sleep(3)
-            return Program()       
 
-    def instagram(self):
-        Program.login(self)
-        Program.Following(self)
-        Program.Followers(self)
-        Program.x(self)
+        except (ZeroDivisionError, ValueError):
+            print('\033c'+self.index+'INPUT ERROR... PROGRAM RESTARTED...')
+            sleep(3)
+            return Program()
         
-    def scroll(self,x):
-        self.x = x
-        js = """
-        s = document.querySelector(".isgrP");
-        s.scrollTo(0,s.scrollHeight);
-        var ss = s.scrollHeight;
-        return ss;
-        """
+    def instagram(self):
+        Program.giris(self)
+        Program.islem(self, 'takip')
+        Program.islem(self, 'takipci')
+        Program.islem(self, 'sonuc')
 
-        ss = self.program.execute_script(js)
-        for a in range(0,self.x//2):
-            time.sleep(0.3)
-            end = ss
-            ss = self.program.execute_script(js)
-
-    def loginInfo(self):
+    def giris_bilgi(self):
         try:
-            self.username = input(str("Username : "))
-            self.password = getpass.getpass("Password : ")
+            self.username = input(str("Kullanıcı Adı: "))
+            self.password = pwinput.pwinput(prompt="Şifre: ", mask="*")
 
-            print('\033c',self.index)
-            print(Fore.GREEN+"[OK]"+Fore.WHITE)
-            time.sleep(1)
-            print('\033c',self.index)
-            self.program.get("https://www.instagram.com")
-            sleep(2.5)
-            self.username_input = self.program.find_element_by_css_selector("input[name='username']")
-            self.password_input = self.program.find_element_by_css_selector("input[name='password']")
+            print('\033c', self.index + '[OK]')
+            sleep(1)
+            print('\033c', self.index)
+            self.program.get('https://www.instagram.com')
+            sleep(3)
+            self.username_input = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[1]/div/div/div/div[1]/section/main/article/div[2]/div[1]/div[2]/form/div/div[1]/div/label/input')
+            self.password_input = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[1]/div/div/div/div[1]/section/main/article/div[2]/div[1]/div[2]/form/div/div[2]/div/label/input')
             self.username_input.send_keys(self.username)
             self.password_input.send_keys(self.password)
-            self.login_button = self.program.find_element_by_xpath("//button[@type='submit']")
+            sleep(1)
+            self.login_button = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[1]/div/div/div/div[1]/section/main/article/div[2]/div[1]/div[2]/form/div/div[3]/button')
             self.login_button.click()
             sleep(10)
 
-        except (ZeroDivisionError,ValueError,ElementClickInterceptedException):
-            print('\033c',self.index+Fore.RED+"INPUT ERROR... PROGRAM RESTARTED..."+Fore.WHITE)
-            time.sleep(3)
+        except (ZeroDivisionError, ValueError, ElementClickInterceptedException):
+            print('\033c', self.index + 'INPUT ERROR... PROGRAM RESTARTED...')
+            sleep(3)
             self.program.quit()
             return Program()
-
-    def login(self):
+        
+    def giris(self):
         while True:
-            try:        
+            try:
                 if self.menu == 1:
-                    Program.loginInfo(self)
-                    self.twocode = input(str("TWO FACTOR CODE : "))
-                    print('\033c'+self.index+Fore.GREEN+"\n[OK]\n"+Fore.WHITE)
-                    time.sleep(1)
-                    twofactor_input = self.program.find_element_by_css_selector("input[name='verificationCode']")
+                    Program.giris_bilgi(self)
+                    self.twocode = pwinput.pwinput(prompt="İki aşamalı doğrulama kodunu giriniz: ", mask="*")
+                    print('\033c', self.index + '\n[OK]\n')
+                    sleep(1)
+                    twofactor_input = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div/div[2]/form/div[1]/div/label/input')
                     twofactor_input.send_keys(self.twocode)
-                    self.program.find_element_by_xpath('/html/body/div[1]/section/main/div/div/div[1]/div/form/div[2]/button').click()
+                    self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[1]/div/div/div/div[1]/section/main/div/div/div/div[2]/form/div[2]/button').click()
                     sleep(10)
-                    self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/div/div/button').click()
-                    sleep(5)
-                    print('\033c',self.index)
-                    print("LOGIN"+Fore.GREEN+"  [OK]"+Fore.WHITE)
-                    time.sleep(1)
+                    print('\033c', self.index)
+                    print('LOGIN [OK]')
+                    sleep(1)
                     break
-                    
 
                 elif self.menu == 2:
-                    Program.loginInfo(self)
-                    #self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/div/div/button').click()
+                    Program.giris_bilgi(self)
                     sleep(5)
-                    print("LOGIN"+Fore.GREEN+"  [OK]"+Fore.WHITE)
-                    time.sleep(1)
+                    print('LOGIN [OK]')
+                    sleep(1)
                     break
 
                 else:
-                    print('\033c',self.index+Fore.RED+"INPUT ERROR... PROGRAM RESTARTED..."+Fore.WHITE)
-                    time.sleep(3)
                     self.program.quit()
                     return Program()
 
             except NoSuchElementException:
-                print('\033c',self.index+Fore.RED+"ERROR PROGRAM RESTARTED..."+Fore.WHITE)
-                time.sleep(3)
+                print('\033c', self.index + 'INPUT ERROR... PROGRAM RESTARTED...')
+                sleep(3)
                 self.program.quit()
                 return Program()
-            
-    def Following(self):
+        
+    def islem(self, islemkodu):
         while True:
             try:
-                self.program.get("https://www.instagram.com/%s" % self.username)
-                sleep(1)
-                self.followingcount = self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[3]/a/div/span').text
-                self.followingcount = int(self.followingcount) + 10
-                self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[3]').click()
-                sleep(2)
-                Program.scroll(self,self.followingcount)
-                print("\nFOLLOW"+Fore.GREEN+"  [OK]"+Fore.WHITE)
-                sleep(1)
-                x = 0
-                for i in range(1,self.followingcount):
-                    x += 1
-                    scr1 = self.program.find_element_by_xpath('/html/body/div[6]/div/div/div/div[3]/ul/div/li[%s]' % i)
-                    self.program.execute_script("arguments[0].scrollIntoView();", scr1)
-                    text = scr1.text.encode('utf-8').split()
-                    followinglist.append(text[0].decode())
+                self.program.get("https://www.instagram.com/{}".format(self.username))
+                sleep(5)
+                if islemkodu == 'takip':
+                    self.takipedilensayisi = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a/span/span').text
+                    print('\nTAKİP EDİLEN SAYISI: '+str(self.takipedilensayisi))
+                    self.takipedilensayisi = int(self.takipedilensayisi) + 10
+                    self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[3]/a').click()
+                    sleep(2)
+                    Program.scroll(self, self.takipedilensayisi)
+                    print('\nTAKİP [OK]')
+                    sleep(1)
+                    for i in range(1, self.takipedilensayisi):
+                        islem1 = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[3]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/div[1]/div/div[{}]/div/div/div/div[2]/div/div/span[1]'.format(i))
+                        print(str(i)+' --> '+islem1.text)
+                        takiplistesi.append(islem1.text)
+                    break
+
+                if islemkodu == 'takipci':
+                    self.takipcisayisi = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[2]/a/span/span').text
+                    print('\nTAKİPÇİ SAYISI: '+str(self.takipcisayisi))
+                    self.takipcisayisi = int(self.takipcisayisi) + 10
+                    self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/div[2]/section/main/div/header/section/ul/li[2]/a').click()
+                    sleep(2)
+                    Program.scroll(self, self.takipcisayisi)
+                    print('\nTAKİPÇİ [OK]')
+                    sleep(1)
+                    for i in range(1, self.takipcisayisi):
+                        islem2 = self.program.find_element(By.XPATH, '/html/body/div[2]/div/div/div[3]/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[2]/div[1]/div/div[{}]/div/div/div/div[2]/div/div/span[1]'.format(i))
+                        name=islem2.text.split()
+                        print(str(i)+' --> '+name[0])
+                        takipcilistesi.append(name[0])
+                    break
+
+                if islemkodu == 'sonuc':
+                    print('\nTAKİP ETMEYEN [OK]')
+                    count = 0
+                    xx = list(set(takiplistesi)-set(takipcilistesi))
+                    for i in xx:
+                        count += 1
+                        print(str(count)+" --> " +i+"\n")
+                    self.program.quit()
+                    break
 
             except NoSuchElementException:
                 break
+
+    def scroll(self, x):
+        self.x = x
+        js = """
+        var s = document.querySelector("._aano");
+        s.scrollTo(0, s.scrollHeight);
+        var ss = s.scrollHeight;
+        ss;
+        """
+        for a in range(0, self.x//4):
+            sleep(0.2)
+            self.program.execute_script(js)
     
-    def Followers(self):
-        while True:
-            try:
-                self.program.get("https://www.instagram.com/%s" % self.username)
-                sleep(1)
-                self.followerscount = self.program.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/ul/li[2]/a/div/span').text
-                self.followerscount = int(self.followerscount) + 10
-                self.program.find_element_by_xpath('/html/body/div[1]/section/main/div/header/section/ul/li[2]/a/div').click()
-                sleep(1)
-                Program.scroll(self,self.followerscount)
-                print("\nFOLLOWERS"+Fore.GREEN+"  [OK]"+Fore.WHITE)
-                sleep(1)
-                x = 0
-
-                for i in range(1,self.followerscount):
-                    x += 1
-                    scr1 = self.program.find_element_by_xpath('/html/body/div[6]/div/div/div/div[2]/ul/div/li[%s]' % i)
-                    self.program.execute_script("arguments[0].scrollIntoView();", scr1)
-                    text = scr1.text.encode('utf-8').split()
-                    followerslist.append(text[0].decode())
-            
-            except NoSuchElementException:
-                break
-
-    def x(self):
-        print("\nUNFOLLOWERS",Fore.GREEN+" [OK]\n"+Fore.WHITE)
-        sleep(2)
-        count = 0
-        xx = list(set(followinglist)-set(followerslist))
-        for i in xx:
-            count += 1
-            print(Fore.GREEN+str(count)+" --> " +Fore.WHITE+i+"\n")
-
-        self.program.quit()
 
     def ascii(self):
-        self.index = str(Fore.GREEN+'''
+        self.index = str('''
            __           _____     __    _ 
  ______ __/ /  ___ ____/ _/ /__  / /__ (_)
 / __/ // / _ \/ -_) __/ _/ / _ \/  '_// / 
 \__/\_, /_.__/\__/_/ /_//_/\___/_/\_\/_/  
    /___/                                  
-'''+"\nunfollowers"+"\t"*4+"v1.0\n"+"="*44+"\n"+Fore.WHITE)
+'''+"\nunfollowers"+"\t"*4+"v1.1\n"+"="*44+"\n")
 
-Program()
+system = platform.system()
+
+if system == 'Windows':
+    Program(driver=webdriver.Chrome(options=chrome_options))
+
+elif system == 'Linux':
+    Program(driver=webdriver.Firefox(options=firefox_options))
+
+else:
+    print('İşletim sistemi tanınmadı. Program başlatılamadı.')
