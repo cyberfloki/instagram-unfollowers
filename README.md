@@ -8,3 +8,9 @@
     pip install -r requriments.txt
     python unfollowers.py
 ```
+
+### Requirements
+```
+    Windows: Google Chrome
+    Linux: Firefox
+```
